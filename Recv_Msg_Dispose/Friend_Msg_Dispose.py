@@ -11,7 +11,7 @@ import os
 
 
 class Friend_Msg_Dispose:
-    def __init__(self, wcf: Wcf):
+    def __init__(self, wcf: Wcf, chat_mgr: ChatManager):
         self.wcf = wcf
         # 读取配置文件
         current_path = os.path.dirname(__file__)
@@ -26,7 +26,7 @@ class Friend_Msg_Dispose:
         # 实例化Api类
         self.Ams = Api_Main_Server(wcf=self.wcf)
 
-        self.chat_mgr = ChatManager()
+        self.chat_mgr = chat_mgr
 
     # 消息处理
     def Msg_Dispose(self, msg):
@@ -77,9 +77,14 @@ class Friend_Msg_Dispose:
                     self.wcf.send_text('[SYS] Chat history cleared.', msg.sender)
                     return
                 res = self.chat_mgr.chat(msg.sender, msg.content)
+                if res == '/skip':
+                    OutPut.outPut(f'[*]: 模型跳过了本次回复')
+                    return
+                OutPut.outPut(f'[+]: Chat response: {res}')
                 self.wcf.send_text(res, msg.sender)
             except Exception as e:
                 self.wcf.send_text(f'[SYS] Error: {e}', msg.sender)
+                OutPut.outPut(f'[-]: 出现错误, 错误信息: {e}')
 
     # Ai对话实现
     def get_ai(self, msg):

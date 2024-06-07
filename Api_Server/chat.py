@@ -18,7 +18,7 @@ class ChatManager:
         self.history: dict[str, list[Message]] = {}
         
         cur_path = os.path.dirname(__file__)
-        self.init_msgs: list[Message] = json.load(open(cur_path + '/../Config/init_msgs.json', encoding='UTF-8'))
+        self.init_msgs: list[Message] = yaml.load(open(cur_path + '/../Config/init_msgs.yaml', encoding='UTF-8'), yaml.Loader)
         config = yaml.load(open(cur_path + '/../Config/config.yaml', encoding='UTF-8'), yaml.Loader)
         config = config['Api_Server']['chat']
         self.api = config['api']

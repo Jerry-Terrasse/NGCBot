@@ -2,6 +2,7 @@ from Api_Server.Api_Main_Server import Api_Main_Server
 from Cache.Cache_Main_Server import Cache_Main_Server
 from Db_Server.Db_Point_Server import Db_Point_Server
 from Db_Server.Db_Main_Server import Db_Main_Server
+from Api_Server.chat import ChatManager
 from typing import Callable
 from OutPut import OutPut
 import datetime
@@ -12,7 +13,7 @@ import os
 
 
 class Push_Main_Server:
-    def __init__(self, wcf):
+    def __init__(self, wcf, chat_mgr: ChatManager):
         self.wcf = wcf
         current_path = os.path.dirname(__file__)
         config = yaml.load(open(current_path + '/../Config/config.yaml', encoding='UTF-8'), yaml.Loader)
@@ -21,6 +22,7 @@ class Push_Main_Server:
         self.Dms = Db_Main_Server(wcf=self.wcf)
         self.Cms = Cache_Main_Server(wcf=self.wcf)
         self.Dps = Db_Point_Server()
+        self.chat_mgr = chat_mgr
 
         # 下班消息
         self.Off_Work_msg = config['Push_Config']['Key_Word']['Off_Work_Msg']
@@ -32,6 +34,8 @@ class Push_Main_Server:
         self.Off_Work_Time = config['Push_Config']['Off_Work_Time']
         self.Fish_Time = config['Push_Config']['Fish_Time']
         self.Kfc_Time = config['Push_Config']['Kfc_Time']
+        
+        self.master = config['Administrators'][0]
 
     # 早安寄语推送
     def push_morning_msg(self):
@@ -98,20 +102,41 @@ class Push_Main_Server:
         for room_id in room_dicts.keys():
             self.wcf.send_text(msg=kfc_msg, receiver=room_id)
         OutPut.outPut(f'[+]: 定时KFC文案发送成功！！！')
-
+    
+    # 整点报时
+    def push_ever_hour(self):
+        now = datetime.datetime.now()
+        now = now.replace(minute=0, second=0, microsecond=0)
+        hour = now.hour
+        time_text = now.strftime("%Y-%m-%d %H:%M:%S")
+        OutPut.outPut(f'[*]: 整点报时 {time_text}')
+        try:
+            msg = f'now time: {time_text}'
+            res = self.chat_mgr.chat(self.master, msg, role='user')
+            if res == '/skip':
+                OutPut.outPut(f'[*]: 模型跳过了本次回复')
+                return
+            OutPut.outPut(f'[+]: Chat response: {res}')
+            self.wcf.send_text(res, self.master)
+        except Exception as e:
+            OutPut.outPut(f'[-]: 出现错误, 错误信息: {e}')
+    
     def run(self, is_running: Callable[[], bool]):
-        schedule.every().day.at(self.Morning_Push_Time).do(self.push_morning_msg)
-        schedule.every().day.at(self.Morning_Page_Tome).do(self.push_morning_page)
-        schedule.every().day.at(self.Fish_Time).do(self.push_fish)
-        schedule.every().thursday.at(self.Kfc_Time).do(self.push_kfc)
-        schedule.every().day.at(self.Evening_Page_Time).do(self.push_evening_page)
-        schedule.every().day.at(self.Off_Work_Time).do(self.push_off_work)
+        # schedule.every().day.at(self.Morning_Push_Time).do(self.push_morning_msg)
+        # schedule.every().day.at(self.Morning_Page_Tome).do(self.push_morning_page)
+        # schedule.every().day.at(self.Fish_Time).do(self.push_fish)
+        # schedule.every().thursday.at(self.Kfc_Time).do(self.push_kfc)
+        # schedule.every().day.at(self.Evening_Page_Time).do(self.push_evening_page)
+        # schedule.every().day.at(self.Off_Work_Time).do(self.push_off_work)
         schedule.every().day.at('00:00').do(self.clear_sign)
         schedule.every().day.at('03:00').do(self.clear_cache)
+        # 整点报时
+        schedule.every().hour.at(':00').do(self.push_ever_hour)
         OutPut.outPut(f'[+]: 已开启定时推送服务！！！')
         while is_running():
             schedule.run_pending()
             time.sleep(1)
+        OutPut.outPut(f'[+]: 定时推送服务已退出！！！')
 
 
 if __name__ == '__main__':

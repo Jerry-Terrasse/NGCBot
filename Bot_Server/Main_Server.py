@@ -4,6 +4,7 @@ from Push_Server.Push_Main_Server import Push_Main_Server
 from Cache.Cache_Main_Server import Cache_Main_Server
 from Db_Server.Db_Point_Server import Db_Point_Server
 from Db_Server.Db_Main_Server import Db_Main_Server
+from Api_Server.chat import ChatManager
 import xml.etree.ElementTree as ET
 from threading import Thread
 from cprint import cprint
@@ -29,6 +30,8 @@ class Main_Server:
         # 判断登录
         self.is_login()
 
+        self.chat_mgr = ChatManager()
+
         # 实例化数据服务类并初始化
         self.Dms = Db_Main_Server(wcf=self.wcf)
         self.Dms.db_init()
@@ -37,16 +40,16 @@ class Main_Server:
         self.Dps.db_init()
         Thread(target=self.Dms.query_all_users, name="获取所有的联系人").start()
 
-        # 实例化定时推送类
-        self.Pms = Push_Main_Server(wcf=self.wcf)
-        Thread(target=self.Pms.run, args=(self.wcf.is_receiving_msg,), name="定时推送服务").start()
-
         # 开启全局消息接收(不接收朋友圈消息)
         self.wcf.enable_receiving_msg()
         Thread(target=self.process_msg, name="GetMessage", args=(self.wcf,), daemon=True).start()
 
+        # 实例化定时推送类
+        self.Pms = Push_Main_Server(wcf=self.wcf, chat_mgr=self.chat_mgr)
+        Thread(target=self.Pms.run, args=(self.wcf.is_receiving_msg,), name="定时推送服务").start()
+
         # 实例化好友消息处理类
-        self.Fms = Friend_Msg_Dispose(wcf=self.wcf)
+        self.Fms = Friend_Msg_Dispose(wcf=self.wcf, chat_mgr=self.chat_mgr)
         # 实例化群消息处理类
         self.Rms = Room_Msg_Dispose(wcf=self.wcf)
         # 实例化文件处理类
