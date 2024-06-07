@@ -1,14 +1,17 @@
 from Api_Server.Api_Main_Server import Api_Main_Server
 from Db_Server.Db_Main_Server import Db_Main_Server
+from Api_Server.chat import ChatManager
 import xml.etree.ElementTree as ET
 from threading import Thread
 from OutPut import OutPut
+from wcferry import Wcf
+from wcferry.wxmsg import WxMsg
 import yaml
 import os
 
 
 class Friend_Msg_Dispose:
-    def __init__(self, wcf):
+    def __init__(self, wcf: Wcf):
         self.wcf = wcf
         # 读取配置文件
         current_path = os.path.dirname(__file__)
@@ -22,6 +25,8 @@ class Friend_Msg_Dispose:
         self.Dms = Db_Main_Server(wcf=self.wcf)
         # 实例化Api类
         self.Ams = Api_Main_Server(wcf=self.wcf)
+
+        self.chat_mgr = ChatManager()
 
     # 消息处理
     def Msg_Dispose(self, msg):
@@ -51,7 +56,7 @@ class Friend_Msg_Dispose:
         # Ai对话forward_msg
         elif msg.type == 1:
             OutPut.outPut(f'[*]: 检测到好友消息, 正在处理... ...')
-            Thread(target=self.get_ai, name="Ai对话", args=(msg,)).start()
+            Thread(target=self.do_chat, name="Ai对话", args=(msg,)).start()
         else:
             OutPut.outPut(f'[-]: 未知类型消息 {msg}')
         # 消息转发给主人
@@ -63,6 +68,18 @@ class Friend_Msg_Dispose:
             for administrator in self.Administrators:
                 OutPut.outPut(f'[+]: 转发消息给主人: {administrator}')
                 self.wcf.forward_msg(id=msg.id, receiver=administrator)
+
+    def do_chat(self, msg: WxMsg):
+        if self.Ai_Lock or msg.sender in self.Administrators:
+            try:
+                if msg.content == '/clear':
+                    self.chat_mgr.clear(msg.sender)
+                    self.wcf.send_text('[SYS] Chat history cleared.', msg.sender)
+                    return
+                res = self.chat_mgr.chat(msg.sender, msg.content)
+                self.wcf.send_text(res, msg.sender)
+            except Exception as e:
+                self.wcf.send_text(f'[SYS] Error: {e}', msg.sender)
 
     # Ai对话实现
     def get_ai(self, msg):
