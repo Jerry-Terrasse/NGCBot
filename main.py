@@ -20,3 +20,5 @@ Bot_Logo = """
 if __name__ == '__main__':
     cprint.info(Bot_Logo.strip())
     Ms = Main_Server()
+    Ms.keep_running()
+    breakpoint()

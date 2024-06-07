@@ -2,10 +2,12 @@ from Api_Server.Api_Main_Server import Api_Main_Server
 from Cache.Cache_Main_Server import Cache_Main_Server
 from Db_Server.Db_Point_Server import Db_Point_Server
 from Db_Server.Db_Main_Server import Db_Main_Server
+from typing import Callable
 from OutPut import OutPut
 import datetime
 import schedule
 import yaml
+import time
 import os
 
 
@@ -97,7 +99,7 @@ class Push_Main_Server:
             self.wcf.send_text(msg=kfc_msg, receiver=room_id)
         OutPut.outPut(f'[+]: 定时KFC文案发送成功！！！')
 
-    def run(self):
+    def run(self, is_running: Callable[[], bool]):
         schedule.every().day.at(self.Morning_Push_Time).do(self.push_morning_msg)
         schedule.every().day.at(self.Morning_Page_Tome).do(self.push_morning_page)
         schedule.every().day.at(self.Fish_Time).do(self.push_fish)
@@ -107,8 +109,9 @@ class Push_Main_Server:
         schedule.every().day.at('00:00').do(self.clear_sign)
         schedule.every().day.at('03:00').do(self.clear_cache)
         OutPut.outPut(f'[+]: 已开启定时推送服务！！！')
-        while True:
+        while is_running():
             schedule.run_pending()
+            time.sleep(1)
 
 
 if __name__ == '__main__':

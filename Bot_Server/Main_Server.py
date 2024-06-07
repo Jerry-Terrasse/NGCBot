@@ -39,7 +39,7 @@ class Main_Server:
 
         # 实例化定时推送类
         self.Pms = Push_Main_Server(wcf=self.wcf)
-        Thread(target=self.Pms.run, name="定时推送服务").start()
+        Thread(target=self.Pms.run, args=(self.wcf.is_receiving_msg,), name="定时推送服务").start()
 
         # 开启全局消息接收(不接收朋友圈消息)
         self.wcf.enable_receiving_msg()
@@ -53,8 +53,14 @@ class Main_Server:
         self.Cms = Cache_Main_Server(wcf=self.wcf)
         self.Cms.init_cache()
 
+    def keep_running(self):
         # 持续运行
-        self.wcf.keep_running()
+        try:
+            self.wcf.keep_running()
+        except KeyboardInterrupt:
+            OutPut.outPut('[*]: 退出程序中... ...')
+            self.wcf.cleanup()
+            OutPut.outPut('[+]: 清理完成')
 
     # 判断登录
     def is_login(self):
