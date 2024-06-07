@@ -31,6 +31,9 @@ class Friend_Msg_Dispose:
         if rooms_id:
             OutPut.outPut(f'[*]: 检测到关键词进群, 正在处理... ...')
             Thread(target=self.Join_Room, name="关键词进群", args=(rooms_id, msg,)).start()
+        elif msg.from_self():
+            OutPut.outPut(f'[~]: 跳过自己发的消息')
+            return
         # 处理好友红包, 转发消息给主人
         elif msg.type == 10000 and '收到红包，请在手机上查看' in msg.content.strip():
             OutPut.outPut(f'[*]: 检测到好友红包, 正在处理... ...')
