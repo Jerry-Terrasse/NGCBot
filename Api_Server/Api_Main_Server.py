@@ -112,7 +112,7 @@ class Api_Main_Server:
         def getGpt(content):
             self.messages.append({"role": "user", "content": f'{content}'})
             data = {
-                "model": "gpt-3.5-turbo",
+                "model": "phi3",
                 "messages": self.messages
             }
             headers = {

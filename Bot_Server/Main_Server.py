@@ -83,7 +83,7 @@ class Main_Server:
                 # 拿到每一条消息
                 msg = wcf.get_msg()
                 # OutPut.outPut('[收到消息]: ' + str(msg)[:100])
-                OutPut.outPut(f'[*]: 收到消息, type={msg.type}, sender={msg.sender}, roomid={msg.roomid}, content={msg.content}')
+                OutPut.outPut(f'[_]: 收到消息, type={msg.type}, sender={msg.sender}, roomid={msg.roomid}, content={msg.content}')
                 # 拿到推送群聊
                 push_rooms = self.Dms.show_push_rooms()
                 # 查询好友 是否在数据库,如果不在自动添加到数据库中
@@ -105,7 +105,7 @@ class Main_Server:
                     root_xml = ET.fromstring(msg.content.strip())
                     wx_id = root_xml.attrib["fromusername"]
                     OutPut.outPut(f'[*]: 接收到新的好友申请, 微信id为: {wx_id}')
-                    OutPut.outPut(f'[*]: 跳过好友申请, 不自动通过')
+                    OutPut.outPut(f'[~]: 跳过好友申请, 不自动通过')
                     continue
                     v3 = root_xml.attrib["encryptusername"]
                     v4 = root_xml.attrib["ticket"]
@@ -120,12 +120,16 @@ class Main_Server:
                     Thread(target=self.Fms.Msg_Dispose, name="好友消息处理", args=(msg,)).start()
                 # 群消息处理
                 elif msg.roomid:
+                    OutPut.outPut(f'[~]: 忽略群消息')
+                    continue
                     Thread(target=self.Rms.Msg_Dispose, name="群消息处理", args=(msg,)).start()
                 # 公众号消息处理
                 elif 'gh_' in msg.sender:
                     pass
                 # 其它好友类消息 不是wxid_的
                 else:
+                    OutPut.outPut(f'[~]: 忽略其他好友类消息')
+                    continue
                     Thread(target=self.Fms.Msg_Dispose, name="好友消息处理", args=(msg,)).start()
             except Empty:
                 # 消息为空 则从队列接着拿

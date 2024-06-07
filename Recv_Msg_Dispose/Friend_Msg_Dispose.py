@@ -49,13 +49,16 @@ class Friend_Msg_Dispose:
         elif msg.type == 1:
             OutPut.outPut(f'[*]: 检测到好友消息, 正在处理... ...')
             Thread(target=self.get_ai, name="Ai对话", args=(msg,)).start()
+        else:
+            OutPut.outPut(f'[-]: 未知类型消息 {msg}')
         # 消息转发给主人
-        OutPut.outPut(f'[*]: 检测到消息, 正在转发... ...')
-        Thread(target=self.forward_msg, name='转发消息给主人', args=(msg, )).start()
+        # OutPut.outPut(f'[*]: 检测到消息, 正在转发... ...')
+        # Thread(target=self.forward_msg, name='转发消息给主人', args=(msg, )).start()
 
     def forward_msg(self, msg):
         if msg.type == 1:
             for administrator in self.Administrators:
+                OutPut.outPut(f'[+]: 转发消息给主人: {administrator}')
                 self.wcf.forward_msg(id=msg.id, receiver=administrator)
 
     # Ai对话实现
