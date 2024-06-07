@@ -29,20 +29,28 @@ class Friend_Msg_Dispose:
         # 关键词进群
         rooms_id = self.Room_Key_Word.get(msg.content.strip())
         if rooms_id:
+            OutPut.outPut(f'[*]: 检测到关键词进群, 正在处理... ...')
             Thread(target=self.Join_Room, name="关键词进群", args=(rooms_id, msg,)).start()
         # 处理好友红包, 转发消息给主人
         elif msg.type == 10000 and '收到红包，请在手机上查看' in msg.content.strip():
+            OutPut.outPut(f'[*]: 检测到好友红包, 正在处理... ...')
             Thread(target=self.Forward_Msg, name="转发红包消息", args=(msg,)).start()
         # 转发公众号消息到推送群聊
         elif msg.type == 49 and msg.sender in self.Administrators and '转账' not in msg.content and 'gh_' in msg.content:
+            OutPut.outPut(f'[*]: 检测到公众号消息, 正在处理... ...')
+            return # 禁用功能
             Thread(target=self.ForWard_Gh, name="转发公众号消息", args=(msg,)).start()
         # 自动接收转账
         elif msg.type == 49 and '转账' in msg.content:
+            OutPut.outPut(f'[*]: 检测到好友转账消息, 正在处理... ...')
+            return # 禁用功能
             Thread(target=self.Accept_Money, name="转账消息处理", args=(msg,)).start()
         # Ai对话forward_msg
         elif msg.type == 1:
+            OutPut.outPut(f'[*]: 检测到好友消息, 正在处理... ...')
             Thread(target=self.get_ai, name="Ai对话", args=(msg,)).start()
         # 消息转发给主人
+        OutPut.outPut(f'[*]: 检测到消息, 正在转发... ...')
         Thread(target=self.forward_msg, name='转发消息给主人', args=(msg, )).start()
 
     def forward_msg(self, msg):
