@@ -2,10 +2,11 @@ from Api_Server.Api_Main_Server import Api_Main_Server
 from Db_Server.Db_Main_Server import Db_Main_Server
 from Api_Server.chat import ChatManager
 import xml.etree.ElementTree as ET
+from wcferry.wxmsg import WxMsg
+from datetime import datetime
 from threading import Thread
 from OutPut import OutPut
 from wcferry import Wcf
-from wcferry.wxmsg import WxMsg
 import yaml
 import os
 
@@ -76,6 +77,8 @@ class Friend_Msg_Dispose:
                     self.chat_mgr.clear(msg.sender)
                     self.wcf.send_text('[SYS] Chat history cleared.', msg.sender)
                     return
+                time_text = f'[timer] now time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
+                self.chat_mgr.append(msg.sender, time_text, role='system')
                 res = self.chat_mgr.chat(msg.sender, msg.content)
                 if res == '/skip':
                     OutPut.outPut(f'[*]: 模型跳过了本次回复')
