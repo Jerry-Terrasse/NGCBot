@@ -78,7 +78,7 @@ class Friend_Msg_Dispose:
                     self.wcf.send_text('[SYS] Chat history cleared.', msg.sender)
                     return
                 time_text = f'[timer] now time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
-                self.chat_mgr.append(msg.sender, time_text, role='system')
+                self.chat_mgr.append(msg.sender, time_text, role='tool')
                 res = self.chat_mgr.chat(msg.sender, msg.content)
                 if res == '/skip':
                     OutPut.outPut(f'[*]: 模型跳过了本次回复')

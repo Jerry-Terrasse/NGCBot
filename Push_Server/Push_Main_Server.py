@@ -112,7 +112,7 @@ class Push_Main_Server:
         OutPut.outPut(f'[*]: 整点报时 {time_text}')
         try:
             msg = f'[timer] now time: {time_text}'
-            res = self.chat_mgr.chat(self.master, msg, role='system')
+            res = self.chat_mgr.chat(self.master, msg, role='tool')
             if res == '/skip':
                 OutPut.outPut(f'[*]: 模型跳过了本次回复')
                 return
