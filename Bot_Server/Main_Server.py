@@ -16,6 +16,8 @@ import yaml
 import os
 import re
 
+import uvicorn
+from vortana.app import create_app
 
 class Main_Server:
     def __init__(self):
@@ -55,6 +57,14 @@ class Main_Server:
         # 实例化文件处理类
         self.Cms = Cache_Main_Server(wcf=self.wcf)
         self.Cms.init_cache()
+
+        # 启动 Vortana 服务
+        vortana_thread = Thread(
+            target=self.run_vortana,
+            args=(self.wcf, config['Administrators'][0]),
+            name="Vortana API", daemon=True
+        )
+        vortana_thread.start()
 
     def keep_running(self):
         # 持续运行
@@ -188,6 +198,12 @@ class Main_Server:
         except Exception as e:
             pass
 
+    def run_vortana(self, wcf: Wcf, master: str):
+        app = create_app(wcf, master)
+        try:
+            uvicorn.run(app, host='10.1.0.4', port=4000)
+        except Exception as e:
+            OutPut.outPut(f'[-]: Vortana 服务启动失败, 错误信息: {e}')
 
 if __name__ == '__main__':
     Ms = Main_Server()
