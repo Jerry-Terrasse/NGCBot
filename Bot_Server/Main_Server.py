@@ -19,6 +19,8 @@ import re
 import uvicorn
 from vortana.app import create_app
 
+from timeslice.analyzer import Analyzer as TSAnalyzer, pipeline as ts_ppl
+
 class Main_Server:
     def __init__(self):
         # 读取配置文件
@@ -46,12 +48,17 @@ class Main_Server:
         self.wcf.enable_receiving_msg()
         Thread(target=self.process_msg, name="GetMessage", args=(self.wcf,), daemon=True).start()
 
+        # 初始化Timeslice模块
+        ts_config = config['Vortana']['Timeslice']
+        tsa = TSAnalyzer(ts_config['napcat_api'], int(ts_config['group_id']))
+        self.run_tsa = lambda: ts_ppl(tsa, reload_mapping=True)
+
         # 实例化定时推送类
         self.Pms = Push_Main_Server(wcf=self.wcf, chat_mgr=self.chat_mgr)
         Thread(target=self.Pms.run, args=(self.wcf.is_receiving_msg,), name="定时推送服务").start()
 
         # 实例化好友消息处理类
-        self.Fms = Friend_Msg_Dispose(wcf=self.wcf, chat_mgr=self.chat_mgr)
+        self.Fms = Friend_Msg_Dispose(wcf=self.wcf, chat_mgr=self.chat_mgr, run_tsa=self.run_tsa)
         # 实例化群消息处理类
         self.Rms = Room_Msg_Dispose(wcf=self.wcf)
         # 实例化文件处理类
@@ -61,7 +68,7 @@ class Main_Server:
         # 启动 Vortana 服务
         vortana_thread = Thread(
             target=self.run_vortana,
-            args=(self.wcf, config['Administrators'][0]),
+            args=(self.wcf, config['Administrators'][0], config['Vortana']['bind_addr']),
             name="Vortana API", daemon=True
         )
         vortana_thread.start()
@@ -198,10 +205,11 @@ class Main_Server:
         except Exception as e:
             pass
 
-    def run_vortana(self, wcf: Wcf, master: str):
+    def run_vortana(self, wcf: Wcf, master: str, bind_addr: str):
         app = create_app(wcf, master)
         try:
-            uvicorn.run(app, host='10.1.0.4', port=4000)
+            host, port = bind_addr.split(':')
+            uvicorn.run(app, host=host, port=int(port))
         except Exception as e:
             OutPut.outPut(f'[-]: Vortana 服务启动失败, 错误信息: {e}')
 

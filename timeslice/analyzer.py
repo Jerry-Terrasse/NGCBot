@@ -4,8 +4,9 @@ import json
 import yaml
 import requests
 import fnmatch
+from threading import Lock
 
-from visualize import visualize as draw_pie
+from .visualize import visualize as draw_pie
 
 class NapCat:
     def __init__(self, api: str, group_id: int):
@@ -96,7 +97,19 @@ class Analyzer:
         return records, slices, cnt
     
     def visualize(self, slices: list[str], start_at: int = 8):
-        draw_pie(slices, self.config['category'], start_at)
+        path = os.path.join(os.path.dirname(__file__), "timeslice.png")
+        draw_pie(path, slices, self.config['category'], start_at)
+        return path
+
+lock = Lock()
+
+def pipeline(analyzer: Analyzer, reload_mapping: bool = False):
+    with lock:
+        if reload_mapping:
+            analyzer.load_mapping()
+        records, slices, cnt = analyzer.analyze()
+        path = analyzer.visualize(slices)
+        return path
 
 if __name__ == "__main__":
     pass

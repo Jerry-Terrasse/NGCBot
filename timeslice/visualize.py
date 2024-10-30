@@ -1,7 +1,7 @@
 import plotly.graph_objects as go
 import numpy as np
 
-def visualize(slices_input: list[str], categories: list[dict], start_at: int = 0):
+def visualize(path: str, slices_input: list[str], categories: list[dict], start_at: int = 0):
     total_slices = 48  # 总共48个半小时段
     time_per_slice = 0.5  # 每个切片代表0.5小时
 
@@ -95,6 +95,6 @@ def visualize(slices_input: list[str], categories: list[dict], start_at: int = 0
     )
 
     # 保存图像到文件
-    fig.write_image('timeslice.png', scale=2)
+    fig.write_image(path, scale=2)
     # 如果您希望在浏览器中查看交互式图表，可以使用：
     # fig.show()

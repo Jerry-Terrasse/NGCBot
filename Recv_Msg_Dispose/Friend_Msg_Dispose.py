@@ -12,7 +12,7 @@ import os
 
 
 class Friend_Msg_Dispose:
-    def __init__(self, wcf: Wcf, chat_mgr: ChatManager):
+    def __init__(self, wcf: Wcf, chat_mgr: ChatManager, **funcs):
         self.wcf = wcf
         # 读取配置文件
         current_path = os.path.dirname(__file__)
@@ -28,6 +28,8 @@ class Friend_Msg_Dispose:
         self.Ams = Api_Main_Server(wcf=self.wcf)
 
         self.chat_mgr = chat_mgr
+
+        self.funcs = funcs
 
     # 消息处理
     def Msg_Dispose(self, msg):
@@ -77,6 +79,15 @@ class Friend_Msg_Dispose:
                     self.chat_mgr.clear(msg.sender)
                     self.wcf.send_text('[SYS] Chat history cleared.', msg.sender)
                     return
+                if msg.content == '/summary':
+                    run_tsa = self.funcs.get('run_tsa')
+                    if run_tsa is None:
+                        self.wcf.send_text('[SYS] Summery not implemented', msg.sender)
+                        return
+                    summary = run_tsa()
+                    self.wcf.send_image(summary, msg.sender)
+                    return
+                
                 time_text = f'[timer] now time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
                 self.chat_mgr.append(msg.sender, time_text, role='tool')
                 res = self.chat_mgr.chat(msg.sender, msg.content)
