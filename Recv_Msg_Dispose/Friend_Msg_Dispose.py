@@ -80,6 +80,9 @@ class Friend_Msg_Dispose:
                     self.wcf.send_text('[SYS] Chat history cleared.', msg.sender)
                     return
                 if msg.content == '/summary':
+                    if msg.sender not in self.Administrators:
+                        self.wcf.send_text('[SYS] Permission denied.', msg.sender)
+                        return
                     run_tsa = self.funcs.get('run_tsa')
                     if run_tsa is None:
                         self.wcf.send_text('[SYS] Summery not implemented', msg.sender)
