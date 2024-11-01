@@ -54,7 +54,7 @@ class Main_Server:
         self.run_tsa = lambda: ts_ppl(tsa, reload_mapping=True)
 
         # 实例化定时推送类
-        self.Pms = Push_Main_Server(wcf=self.wcf, chat_mgr=self.chat_mgr)
+        self.Pms = Push_Main_Server(wcf=self.wcf, chat_mgr=self.chat_mgr, run_tsa=self.run_tsa)
         Thread(target=self.Pms.run, args=(self.wcf.is_receiving_msg,), name="定时推送服务").start()
 
         # 实例化好友消息处理类

@@ -13,7 +13,7 @@ import os
 
 
 class Push_Main_Server:
-    def __init__(self, wcf, chat_mgr: ChatManager):
+    def __init__(self, wcf, chat_mgr: ChatManager, **funcs):
         self.wcf = wcf
         current_path = os.path.dirname(__file__)
         config = yaml.load(open(current_path + '/../Config/config.yaml', encoding='UTF-8'), yaml.Loader)
@@ -36,6 +36,8 @@ class Push_Main_Server:
         self.Kfc_Time = config['Push_Config']['Kfc_Time']
         
         self.master = config['Administrators'][0]
+
+        self.funcs = funcs
 
     # 早安寄语推送
     def push_morning_msg(self):
@@ -121,6 +123,17 @@ class Push_Main_Server:
         except Exception as e:
             OutPut.outPut(f'[-]: 出现错误, 错误信息: {e}')
     
+    # Timeslice summary
+    def push_timeslice_summary(self):
+        OutPut.outPut(f'[*]: 定时时间片日结推送中... ...')
+        try:
+            run_tsa = self.funcs['run_tsa']
+            summary = run_tsa()
+            self.wcf.send_image(summary, self.master)
+            OutPut.outPut(f'[+]: 定时时间片日结推送成功！！！')
+        except Exception as e:
+            OutPut.outPut(f'[-]: 出现错误, 错误信息: {e}')
+    
     def run(self, is_running: Callable[[], bool]):
         # schedule.every().day.at(self.Morning_Push_Time).do(self.push_morning_msg)
         # schedule.every().day.at(self.Morning_Page_Tome).do(self.push_morning_page)
@@ -132,6 +145,9 @@ class Push_Main_Server:
         schedule.every().day.at('03:00').do(self.clear_cache)
         # 整点报时
         schedule.every().hour.at(':00').do(self.push_ever_hour)
+        # Timeslice
+        schedule.every().day.at('00:15').do(self.push_timeslice_summary)
+        
         OutPut.outPut(f'[+]: 已开启定时推送服务！！！')
         while is_running():
             schedule.run_pending()
